@@ -9,9 +9,11 @@
  *		then supply #define REG_foo REG_foo for each enum REG_foo
  *
  *	Glenn Fowler <gsf@research.att.com>
- *	AT&T Labs Research
+ *	AT&T Research
  *
  * PLEASE: publish your tests so everyone can benefit
+ *
+ * The following license covers testregex.c and all associated test data.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of THIS SOFTWARE FILE (the "Software"), to deal in the Software
@@ -32,7 +34,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-static const char id[] = "\n@(#)$Id: testregex (AT&T Research) 2005-05-20 $\0\n";
+static const char id[] = "\n@(#)$Id: testregex (AT&T Research) 2010-06-10 $\0\n";
 
 #if _PACKAGE_ast
 #include <ast.h>
@@ -53,6 +55,10 @@ static const char id[] = "\n@(#)$Id: testregex (AT&T Research) 2005-05-20 $\0\n"
 #include <locale.h>
 #endif
 
+#ifndef RE_DUP_MAX
+#define RE_DUP_MAX	32767
+#endif
+
 #if !_PACKAGE_ast
 #undef	REG_DISCIPLINE
 #endif
@@ -68,15 +74,15 @@ static const char id[] = "\n@(#)$Id: testregex (AT&T Research) 2005-05-20 $\0\n"
 #define TEST_LRE		0x00000010
 #define TEST_SRE		0x00000020
 
-#define TEST_EXPAND		0x00000040
-#define TEST_LENIENT		0x00000080
+#define TEST_EXPAND		0x00000100
+#define TEST_LENIENT		0x00000200
 
-#define TEST_QUERY		0x00000100
-#define TEST_SUB		0x00000200
-#define TEST_UNSPECIFIED	0x00000400
-#define TEST_VERIFY		0x00000800
-#define TEST_AND		0x00001000
-#define TEST_OR			0x00002000
+#define TEST_QUERY		0x00000400
+#define TEST_SUB		0x00000800
+#define TEST_UNSPECIFIED	0x00001000
+#define TEST_VERIFY		0x00002000
+#define TEST_AND		0x00004000
+#define TEST_OR			0x00008000
 
 #define TEST_DELIMIT		0x00010000
 #define TEST_OK			0x00020000
@@ -94,6 +100,8 @@ static const char id[] = "\n@(#)$Id: testregex (AT&T Research) 2005-05-20 $\0\n"
 
 #define TEST_CATCH		0x10000000
 #define TEST_VERBOSE		0x20000000
+
+#define TEST_DECOMP		0x40000000
 
 #define TEST_GLOBAL		(TEST_ACTUAL|TEST_AND|TEST_BASELINE|TEST_CATCH|TEST_FAIL|TEST_IGNORE_ERROR|TEST_IGNORE_OVER|TEST_IGNORE_POSITION|TEST_OR|TEST_PASS|TEST_SUMMARY|TEST_VERBOSE)
 
@@ -114,7 +122,7 @@ compf(const regex_t* re, const char* xstr, size_t xlen, regdisc_t* disc)
 {
 	Disc_t*		dp = (Disc_t*)disc;
 
-	return (void*)++dp->ordinal;
+	return (void*)((char*)0 + ++dp->ordinal);
 }
 
 static int
@@ -122,7 +130,7 @@ execf(const regex_t* re, void* data, const char* xstr, size_t xlen, const char* 
 {
 	Disc_t*		dp = (Disc_t*)disc;
 
-	sfprintf(dp->sp, "{%-.*s}(%d:%d)", xlen, xstr, (int)data, slen);
+	sfprintf(dp->sp, "{%-.*s}(%lu:%d)", xlen, xstr, (char*)data - (char*)0, slen);
 	return atoi(xstr);
 }
 
@@ -195,8 +203,8 @@ T("  0 pointer.\n");
 T("\n");
 T("  Field 1: the regex(3) flags to apply, one character per REG_feature\n");
 T("  flag. The test is skipped if REG_feature is not supported by the\n");
-T("  implementation. If the first character is not [BEASKL] then the\n");
-T("  specification is a global control line. One or more of [BEASKL] may be\n");
+T("  implementation. If the first character is not [BEASKLP] then the\n");
+T("  specification is a global control line. One or more of [BEASKLP] may be\n");
 T("  specified; the test will be repeated for each mode.\n");
 T("\n");
 T("    B 	basic			BRE	(grep, ed, sed)\n");
@@ -227,12 +235,14 @@ T("    r	REG_RIGHT		implicit ...$\n");
 T("    s	REG_SHELL_ESCAPED	\\ not special\n");
 T("    t	REG_MUSTDELIM		all delimiters must be specified\n");
 T("    u	standard unspecified behavior -- errors not counted\n");
+T("    v	REG_CLASS_ESCAPE	\\ special inside [...]\n");
 T("    w	REG_NOSUB		no subexpression match array\n");
 T("    x	REG_LENIENT		let some errors slide\n");
 T("    y	REG_LEFT		regexec() implicit ^...\n");
 T("    z	REG_NULL		NULL subexpressions ok\n");
 T("    $	                        expand C \\c escapes in fields 2 and 3\n");
 T("    /	                        field 2 is a regsubcomp() expression\n");
+T("    =	                        field 3 is a regdecomp() expression\n");
 T("\n");
 T("  Field 1 control lines:\n");
 T("\n");
@@ -253,9 +263,11 @@ T("\n");
 T("    number		use number for nmatch (20 by default)\n");
 T("\n");
 T("  Field 2: the regular expression pattern; SAME uses the pattern from\n");
-T("    the previous specification.\n");
+T("    the previous specification. RE_DUP_MAX inside {...} expands to the\n");
+T("    value from <limits.h>.\n");
 T("\n");
-T("  Field 3: the string to match.\n");
+T("  Field 3: the string to match. X...{RE_DUP_MAX} expands to RE_DUP_MAX\n");
+T("    copies of X.\n");
 T("\n");
 T("  Field 4: the test outcome. This is either one of the posix error\n");
 T("    codes (with REG_ omitted) or the match array, a list of (m,n)\n");
@@ -270,7 +282,7 @@ T("    matched (?{...}) expression, where x is the text enclosed by {...},\n");
 T("    o is the expression ordinal counting from 1, and n is the length of\n");
 T("    the unmatched portion of the subject string. If x starts with a\n");
 T("    number then that is the return value of re_execf(), otherwise 0 is\n");
-T("    returned.\n");
+T("    returned. RE_DUP_MAX[-+]N expands to the <limits.h> value -+N.\n");
 T("\n");
 T("  Field 5: optional comment appended to the report.\n");
 T("\n");
@@ -324,6 +336,9 @@ static const char* unsupported[] =
 	"SHELL",
 #endif
 
+#ifndef REG_CLASS_ESCAPE
+	"CLASS_ESCAPE",
+#endif
 #ifndef REG_COMMENT
 	"COMMENT",
 #endif
@@ -399,9 +414,15 @@ static const char* unsupported[] =
 #if !_REG_subcomp
 	"regsubcomp",
 #endif
+#if !_REG_decomp
+	"redecomp",
+#endif
 	0
 };
 
+#ifndef REG_CLASS_ESCAPE
+#define REG_CLASS_ESCAPE	NOTEST
+#endif
 #ifndef REG_COMMENT
 #define REG_COMMENT	NOTEST
 #endif
@@ -555,6 +576,9 @@ quote(char* s, int len, unsigned long test)
 	unsigned char*	u = (unsigned char*)s;
 	unsigned char*	e;
 	int		c;
+#ifdef MB_CUR_MAX
+	int		w;
+#endif
 
 	if (!u)
 		printf("NIL");
@@ -604,6 +628,15 @@ quote(char* s, int len, unsigned long test)
 				printf("\\v");
 				break;
 			default:
+#ifdef MB_CUR_MAX
+				s = (char*)u - 1;
+				if ((w = mblen(s, (char*)e - s)) > 1)
+				{
+					u += w - 1;
+					fwrite(s, 1, w, stdout);
+				}
+				else
+#endif
 				if (!iscntrl(c) && isprint(c))
 					putchar(c);
 				else
@@ -862,7 +895,8 @@ matchcheck(regmatch_t* match, int nmatch, int nsub, char* ans, char* re, char* s
 #ifdef REG_DISCIPLINE
 			char*	x;
 
-			x = sfstruse(state.disc.sp);
+			if (!(x = sfstruse(state.disc.sp)))
+				bad("out of space [discipline string]\n", NiL, NiL, 0, 0);
 			if (strcmp(p, x))
 			{
 				if (test & (TEST_ACTUAL|TEST_BASELINE|TEST_FAIL|TEST_PASS|TEST_QUERY|TEST_SUMMARY|TEST_VERIFY))
@@ -883,6 +917,13 @@ matchcheck(regmatch_t* match, int nmatch, int nsub, char* ans, char* re, char* s
 			m = -1;
 			p++;
 		}
+		else if (*p == 'R' && !memcmp(p, "RE_DUP_MAX", 10))
+		{
+			m = RE_DUP_MAX;
+			p += 10;
+			if (*p == '+' || *p == '-')
+				m += strtol(p, &p, 10);
+		}
 		else
 			m = strtol(p, &p, 10);
 		if (*p++ != ',')
@@ -891,6 +932,13 @@ matchcheck(regmatch_t* match, int nmatch, int nsub, char* ans, char* re, char* s
 		{
 			n = -1;
 			p++;
+		}
+		else if (*p == 'R' && !memcmp(p, "RE_DUP_MAX", 10))
+		{
+			n = RE_DUP_MAX;
+			p += 10;
+			if (*p == '+' || *p == '-')
+				n += strtol(p, &p, 10);
 		}
 		else
 			n = strtol(p, &p, 10);
@@ -985,7 +1033,7 @@ gotcha(int sig)
 }
 
 static char*
-getline(FILE* fp)
+nextline(FILE* fp)
 {
 	static char	buf[32 * 1024];
 
@@ -1112,6 +1160,59 @@ catchfree(regex_t* preg, int flags, int* tabs, char* spec, char* re, char* s, ch
 	return eret;
 }
 
+static char*
+expand(char* os, char* ot)
+{
+	char*	s = os;
+	char*	t;
+	int	n = 0;
+	int	r;
+	long	m;
+
+	for (;;)
+	{
+		switch (*s++)
+		{
+		case 0:
+			break;
+		case '{':
+			n++;
+			continue;
+		case '}':
+			n--;
+			continue;
+		case 'R':
+			if (n == 1 && !memcmp(s, "E_DUP_MAX", 9))
+			{
+				s--;
+				for (t = ot; os < s; *t++ = *os++);
+				r = ((t - ot) >= 5 && t[-1] == '{' && t[-2] == '.' && t[-3] == '.' && t[-4] == '.') ? t[-5] : 0;
+				os = ot;
+				m = RE_DUP_MAX;
+				if (*(s += 10) == '+' || *s == '-')
+					m += strtol(s, &s, 10);
+				if (r)
+				{
+					t -= 5;
+					while (m-- > 0)
+						*t++ = r;
+					while (*s && *s++ != '}');
+				}
+				else
+					t += snprintf(t, 32, "%ld", m);
+				while (*t = *s++)
+					t++;
+				break;
+			}
+			continue;
+		default:
+			continue;
+		}
+		break;
+	}
+	return os;
+}
+
 int
 main(int argc, char** argv)
 {
@@ -1123,7 +1224,7 @@ main(int argc, char** argv)
 	int		nstr;
 	int		cret;
 	int		eret;
-	int		nsub;
+	size_t	nsub;
 	int		i;
 	int		j;
 	int		expected;
@@ -1153,6 +1254,8 @@ main(int argc, char** argv)
 	regex_t		preg;
 
 	static char	pat[32 * 1024];
+	static char	patbuf[32 * 1024];
+	static char	strbuf[32 * 1024];
 
 	int		nonosub = REG_NOSUB == 0;
 	int		nonexec = 0;
@@ -1343,7 +1446,7 @@ main(int argc, char** argv)
 			signal(SIGBUS, gotcha);
 			signal(SIGSEGV, gotcha);
 		}
-		while (p = getline(fp))
+		while (p = nextline(fp))
 		{
 
 		/* parse: */
@@ -1460,7 +1563,13 @@ main(int argc, char** argv)
 						s = field[1];
 						if (!s || streq(s, "POSIX"))
 							s = "C";
-						if (!(ans = setlocale(LC_COLLATE, s)) || streq(ans, "C") || streq(ans, "POSIX") || !(ans = setlocale(LC_CTYPE, s)) || streq(ans, "C") || streq(ans, "POSIX"))
+						if ((ans = setlocale(LC_COLLATE, s)) && streq(ans, "POSIX"))
+							ans = "C";
+						if (!ans || !streq(ans, s) && streq(s, "C"))
+							ans = 0;
+						else if ((ans = setlocale(LC_CTYPE, s)) && streq(ans, "POSIX"))
+							ans = "C";
+						if (!ans || !streq(ans, s) && streq(s, "C"))
 							skip = note(level, s, skip, test);
 						else
 						{
@@ -1550,6 +1659,9 @@ main(int argc, char** argv)
 				case 'u':
 					test |= TEST_UNSPECIFIED;
 					continue;
+				case 'v':
+					cflags |= REG_CLASS_ESCAPE;
+					continue;
 				case 'w':
 					cflags |= REG_NOSUB;
 					continue;
@@ -1572,6 +1684,10 @@ main(int argc, char** argv)
 
 				case '/':
 					test |= TEST_SUB;
+					continue;
+
+				case '=':
+					test |= TEST_DECOMP;
 					continue;
 
 				case '?':
@@ -1675,7 +1791,7 @@ main(int argc, char** argv)
 					continue;
 				state.passed = state.verify;
 			}
-			if (i < 4)
+			if (i < ((test & TEST_DECOMP) ? 3 : 4))
 				bad("too few fields\n", NiL, NiL, 0, test);
 			while (i < elementsof(field))
 				field[i++] = 0;
@@ -1690,21 +1806,26 @@ main(int argc, char** argv)
 				{
 					if (test & TEST_EXPAND)
 						escape(re);
+					re = expand(re, patbuf);
 					strcpy(ppat = pat, re);
 				}
 			}
 			else
 				ppat = 0;
 			nstr = -1;
-			if ((s = field[2]) && (test & TEST_EXPAND))
+			if (s = field[2])
 			{
-				nstr = escape(s);
+				s = expand(s, strbuf);
+				if (test & TEST_EXPAND)
+				{
+					nstr = escape(s);
 #if _REG_nexec
-				if (nstr != strlen(s))
-					nexec = nstr;
+					if (nstr != strlen(s))
+						nexec = nstr;
 #endif
+				}
 			}
-			if (!(ans = field[3]))
+			if (!(ans = field[(test & TEST_DECOMP) ? 2 : 3]))
 				bad("NIL answer\n", NiL, NiL, 0, test);
 			msg = field[4];
 			fflush(stdout);
@@ -1712,6 +1833,10 @@ main(int argc, char** argv)
 #if _REG_subcomp
 				cflags |= REG_DELIMITED;
 #else
+				continue;
+#endif
+#if !_REG_decomp
+			if (test & TEST_DECOMP)
 				continue;
 #endif
 
@@ -1840,6 +1965,46 @@ main(int argc, char** argv)
 				}
 			}
 #endif
+#if _REG_decomp
+			if (!cret && (test & TEST_DECOMP))
+			{
+				char	buf[128];
+
+				if ((j = nmatch) > sizeof(buf))
+					j = sizeof(buf);
+				fun = "regdecomp";
+				p = re + preg.re_npat;
+				if (!(test & TEST_CATCH))
+					i = regdecomp(&preg, -1, buf, j);
+				else if (!(cret = setjmp(state.gotcha)))
+				{
+					alarm(HUNG);
+					i = regdecomp(&preg, -1, buf, j);
+					alarm(0);
+				}
+				if (!cret)
+				{
+					catchfree(&preg, flags, tabs, line, re, s, ans, msg, NiL, NiL, 0, 0, skip, level, test);
+					if (i > j)
+					{
+						if (i != (strlen(ans) + 1))
+						{
+							report("failed", fun, re, s, nstr, msg, flags, test);
+							printf(" %d byte buffer supplied, %d byte buffer required\n", j, i);
+						}
+					}
+					else if (strcmp(buf, ans))
+					{
+						report("failed", fun, re, s, nstr, msg, flags, test);
+						quote(ans, -1, test|TEST_DELIMIT);
+						printf(" expected, ");
+						quote(buf, -1, test|TEST_DELIMIT);
+						printf(" returned\n");
+					}
+					continue;
+				}
+			}
+#endif
 			if (!cret)
 			{
 				if (!(flags & REG_NOSUB) && nsub < 0 && *ans == '(')
@@ -1865,7 +2030,7 @@ main(int argc, char** argv)
 								else
 								{
 									report("re_nsub incorrect", fun, re, NiL, -1, msg, flags, test);
-									printf("at least %d expected, %d returned\n", nsub, preg.re_nsub);
+									printf("at least %ld expected, %ld returned\n", nsub, preg.re_nsub);
 									state.errors++;
 								}
 							}
@@ -1874,7 +2039,7 @@ main(int argc, char** argv)
 						}
 					}
 				}
-				if (!(test & TEST_SUB) && *ans && *ans != '(' && !streq(ans, "OK") && !streq(ans, "NOMATCH"))
+				if (!(test & (TEST_DECOMP|TEST_SUB)) && *ans && *ans != '(' && !streq(ans, "OK") && !streq(ans, "NOMATCH"))
 				{
 					if (test & (TEST_ACTUAL|TEST_BASELINE|TEST_FAIL|TEST_PASS|TEST_QUERY|TEST_SUMMARY|TEST_VERIFY))
 						skip = extract(tabs, line, re, s, ans, msg, "OK", NiL, 0, 0, skip, level, test|TEST_DELIMIT);
@@ -2080,7 +2245,7 @@ main(int argc, char** argv)
 					goto execute;
 				}
 #endif
-				if (!(test & (TEST_SUB|TEST_VERIFY)) && !nonosub)
+				if (!(test & (TEST_DECOMP|TEST_SUB|TEST_VERIFY)) && !nonosub)
 				{
 					if (catchfree(&preg, flags, tabs, line, re, s, ans, msg, NiL, NiL, 0, 0, skip, level, test))
 						continue;
