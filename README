@@ -1,0 +1,12 @@
+regex(3) test harness
+
+build:	cc -o testregex testregex.c
+help:	testregex --man
+note:	REG_* features are detected by #ifdef; if REG_* are enums
+		then supply #define REG_foo REG_foo for each enum REG_foo
+
+Glenn Fowler <gsf@research.att.com>
+AT&T Research
+
+PLEASE: publish your tests so everyone can benefit
+
