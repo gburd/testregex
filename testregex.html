@@ -1,0 +1,241 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Frameset//EN" "http://www.w3.org/TR/REC-html40/frameset.dtd">
+<HTML>
+<HEAD>
+<META name="generator" content="mm2html (AT&T Research) 2010-09-10">
+<META name="keywords" content="regular expression pattern match regression test">
+<TITLE> ../re/testregex.mm mm document </TITLE>
+<META name="author" content="gsf">
+</HEAD>
+<BODY bgcolor=white link=slateblue vlink=teal >
+<TABLE border=0 align=center width=96%>
+<TBODY><TR><TD valign=top align=left>
+<!--INDEX--><!--/INDEX-->
+<B><FONT size=-1 face="verdana,arial,helvetica,geneva,sans-serif">
+<TABLE align=center cellpadding=2 border=4 bgcolor=lightgrey><TR>
+<TD><A href="testregex.html#Reference Implementations">Reference Implementations</A></TD>
+<TD><A href="testregex.html#Test Data Repository">Test Data Repository</A></TD>
+<TD><A href="testregex.html#Usage">Usage</A></TD>
+<TD><A href="testregex.html#Reference Implementation Notes">Reference Implementation Notes</A></TD>
+<TD><A href="testregex.html#testregex Notes">testregex Notes</A></TD>
+</TR></TABLE>
+</FONT></B>
+<P>
+<HR>
+<CENTER>
+<H3><CENTER><FONT color=red><FONT face=courier>AT&amp;T Research regex(3) regression tests</FONT></FONT></CENTER></H3>
+<BR>Glenn Fowler <SMALL>&lt;<A href=mailto:gsf@research.att.com>gsf@research.att.com</A>&gt;</SMALL>
+<P><I>AT&amp;T Research - Florham Park NJ</I>
+</CENTER>
+<P><HR><P>
+	<A href="testregex.c">testregex.c 2004-05-31</A>
+is the latest source for the AT&amp;T Research regression test
+harness for the
+	<A href="http://www.opengroup.org/onlinepubs/007904975/functions/regcomp.html" target=_top>X/Open regex</A>
+pattern match interface.
+See
+<NOBR><A href="http://web.archive.org/~gsf/man/man1/testregex.html"><STRONG>testregex</STRONG></A>(1)</NOBR>
+for option and test input details.
+The source and test data posted here are license free.
+<P>
+<STRONG>testregex</STRONG>
+can:
+<UL type=square>
+<LI>
+verify stability for a particular implementation in the face of
+source code and/or compilation environment changes
+<LI>
+verify standard compliance for all implementations
+<LI>
+provide a basis for discussions on what
+<EM>compliance</EM>
+means
+</UL>
+<P>
+See
+	<A href="re-interpretation.html">An Interpretation of the POSIX regex Standards</A>
+for an analysis of the POSIX-X/Open
+<STRONG>regex</STRONG>
+standards.
+<P>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="Reference Implementations">Reference Implementations</A></H3></FONT></FONT></CENTER>
+<STRONG>testregex</STRONG>
+is currently built against these reference implementations:
+<P></P><TABLE border=0 frame=void rules=none width=100%><TBODY><TR><TD>
+<TABLE align=center bgcolor=papayawhip border=0 bordercolor=white cellpadding=2 cellspacing=2 frame=void rules=none >
+<TBODY>
+<TR><TD align=right>NAME&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;LABEL&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;AUTHORS</TD></TR>
+<TR><TD align=right>
+AT&amp;T ast&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;<A href="http://www.research.att.com/sw/download/" target=_top>A</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;Glenn Fowler and Doug McIlroy</TD></TR>
+<TR><TD align=right>
+bsd&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;<A href="ftp://ftp.netbsd.org/pub/NetBSD/NetBSD-1.5.2/source/sets/src.tgz" target=_top>B</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;&nbsp;</TD></TR>
+<TR><TD align=right>
+Bell Labs&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;<A href="http://www.bell-labs.com/" target=_top>D</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;Doug McIlroy</TD></TR>
+<TR><TD align=right>
+old gnu&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;<A href="http://www.gnu.org" target=_top>G</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;&nbsp;</TD></TR>
+<TR><TD align=right>
+gnu&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;<A href="http://www.gnu.org" target=_top>H</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;Isamu Hasegawa</TD></TR>
+<TR><TD align=right>
+irix&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;<A href="http://www.sgi.com" target=_top>I</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;&nbsp;</TD></TR>
+<TR><TD align=right>
+boost&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;<A href="http://www.boost.org/libs/regex/" target=_top>J</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;John Maddock</TD></TR>
+<TR><TD align=right>
+regex++&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;<A href="http://ourworld.compuserve.com/homepages/John_Maddock/regexpp.htm" target=_top>M</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;John Maddock</TD></TR>
+<TR><TD align=right>
+pcre perl compatible&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;<A href="http://www.pcre.org/" target=_top>P</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;Philip Hazel</TD></TR>
+<TR><TD align=right>
+rx&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;<A href="ftp://regexps.com/pub/src/hackerlab/" target=_top>R</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;Tom Lord</TD></TR>
+<TR><TD align=right>
+spencer&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;<A href="http://arglist.com/regex/rxspencer-alpha3.8.g2.tar.gz" target=_top>S</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;Henry Spencer</TD></TR>
+<TR><TD align=right>
+libtre&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;<A href="http://kouli.iki.fi/~vlaurika/libtre/" target=_top>T</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;Ville Laurikari</TD></TR>
+<TR><TD align=right>
+unix caldera&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;<A href="http://unixtools.sourceforge.net/" target=_top>U</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;&nbsp;</TD></TR>
+</TBODY></TABLE></TD></TR></TBODY></TABLE>
+<P>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="Test Data Repository">Test Data Repository</A></H3></FONT></FONT></CENTER>
+<P></P><TABLE border=0 frame=void rules=none width=100%><TBODY><TR><TD>
+<TABLE align=center bgcolor=papayawhip border=0 bordercolor=white cellpadding=2 cellspacing=2 frame=void rules=none >
+<TBODY>
+<TR><TD align=right>
+<A href="basic.dat">basic.dat</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;&nbsp;&nbsp;basic regex(3) -- all implementations should pass these</TD></TR>
+<TR><TD align=right>
+<A href="categorize.dat">categorize.dat</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;&nbsp;&nbsp;<A href="re-categorize.html">implementation categorization</A></TD></TR>
+<TR><TD align=right>
+<A href="nullsubexpr.dat">nullsubexpr.dat</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;&nbsp;&nbsp;<A href="re-nullsubexpr.html">null (...)* tests</A></TD></TR>
+<TR><TD align=right>
+<A href="leftassoc.dat">leftassoc.dat</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;&nbsp;&nbsp;<A href="re-assoc.html">left associative catenation implementation must pass these</A></TD></TR>
+<TR><TD align=right>
+<A href="rightassoc.dat">rightassoc.dat</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;&nbsp;&nbsp;<A href="re-assoc.html">right associative catenation implementation must pass these</A></TD></TR>
+<TR><TD align=right>
+<A href="forcedassoc.dat">forcedassoc.dat</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;&nbsp;&nbsp;<A href="re-assoc.html">subexpression grouping to force associativity</A></TD></TR>
+<TR><TD align=right>
+<A href="repetition.dat">repetition.dat</A>&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;&nbsp;&nbsp;<A href="re-repetition.html">explicit vs. implicit repetitions</A></TD></TR>
+</TBODY></TABLE></TD></TR></TBODY></TABLE>
+<P>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="Usage">Usage</A></H3></FONT></FONT></CENTER>
+To run the
+<STRONG>basic.dat</STRONG>
+tests:
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+testregex &lt; basic.dat
+</DIV>
+</PRE>
+<P>
+If the local implementation hangs or dumps on some tests then run with
+the <STRONG>-c</STRONG> option.
+The <STRONG>-h</STRONG> option lists the test data format details.
+The test data files exercise all features;
+the test harness detects and ignores features not
+supported by the local implementation.
+<P>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="Reference Implementation Notes">Reference Implementation Notes</A></H3></FONT></FONT></CENTER>
+<P>
+<H4><A name="D: diet libc">D: diet libc</A></H4>
+The
+	<A href="http://www.fefe.de/dietlibc/" target=_top>diet libc</A>
+implementation is currently omitted because it fails all but one
+<STRONG>basic.dat</STRONG>
+test.
+<P>
+<H4><A name="P: PCRE">P: PCRE</A></H4>
+The
+<STRONG>P</STRONG>
+implementation emulates
+<NOBR><A href="http://web.archive.org/~gsf/man/man1/perl.html"><STRONG>perl</STRONG></A>(1)</NOBR>
+and is not X/Open compliant by design.
+The main differences are:
+<UL type=square>
+<LI>
+<STRONG>P</STRONG>
+<EM>leftmost-first</EM>
+matching as opposed to the X/Open
+<EM>leftmost-longest</EM>.
+<LI>
+<STRONG>REG_EXTENDED</STRONG>
+patterns only.
+</UL>
+<P>
+However, the
+<STRONG>P</STRONG>
+package regression tests, and
+<NOBR><A href="http://web.archive.org/~gsf/man/man1/perl.html"><STRONG>perl</STRONG></A>(1)</NOBR>
+features creeping into other implementations,
+make it reasonable to include here.
+<P>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="testregex Notes">testregex Notes</A></H3></FONT></FONT></CENTER>
+Extensions to the standard terminology are derived from the AT&amp;T
+implementation, unified under
+<STRONG>&lt;regex.h&gt;</STRONG>
+with these modes:
+<P></P><TABLE border=0 frame=void rules=none width=100%><TBODY><TR><TD>
+<TABLE align=center bgcolor=papayawhip border=1 bordercolor=white cellpadding=2 cellspacing=2 frame=box rules=all >
+<TBODY>
+<TR><TD align=center>MODE&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;FLAGS&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;DESCRIPTION</TD></TR>
+<TR><TD align=right>
+BRE&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;0&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;basic RE</TD></TR>
+<TR><TD align=right>
+ERE&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;REG_EXTENDED&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;egrep RE with perl (...) extensions</TD></TR>
+<TR><TD align=right>
+ARE&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;REG_AUGMENTED&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;ERE with ! negation, &lt;&gt; word boundaries</TD></TR>
+<TR><TD align=right>
+SRE&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;REG_SHELL&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;sh patterns</TD></TR>
+<TR><TD align=right>
+KRE&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;REG_SHELL|REG_AUGMENTED&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;ksh93 patterns: ! @ ( | &amp; ) { }</TD></TR>
+<TR><TD align=right>
+LRE&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;REG_LITERAL&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;fgrep patterns</TD></TR>
+</TBODY></TABLE></TD></TR></TBODY></TABLE>
+<P>
+and a few flags to handle
+<NOBR><A href="http://web.archive.org/~gsf/man/man3/fnmatch.html"><STRONG>fnmatch</STRONG></A>(3):</NOBR>
+<P></P><TABLE border=0 frame=void rules=none width=100%><TBODY><TR><TD>
+<TABLE align=center bgcolor=papayawhip border=1 bordercolor=white cellpadding=2 cellspacing=2 frame=box rules=all >
+<TBODY>
+<TR><TD align=left>regex FLAG&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;fnmatch FLAG</TD></TR>
+<TR><TD align=left>
+REG_SHELL_ESCAPED&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;FNM_NOESCAPE</TD></TR>
+<TR><TD align=left>
+REG_SHELL_PATH&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;FNM_PATHNAME</TD></TR>
+<TR><TD align=left>
+REG_SHELL_DOT&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;FNM_PERIOD</TD></TR>
+</TBODY></TABLE></TD></TR></TBODY></TABLE>
+<P>
+The original
+<TT>testregex.c</TT>
+was done by Doug McIlroy at Bell Labs.
+The current implementation is maintained by Glenn Fowler <SMALL>&lt;<A href=mailto:gsf@research.att.com>gsf@research.att.com</A>&gt;</SMALL>.
+<P>
+<HR>
+<TABLE border=0 align=center width=96%>
+<TR>
+<TD align=left></TD>
+<TD align=center></TD>
+<TD align=right><A href="mailto:gsf@research.att.com?subject= ../re/testregex.mm mm document">Glenn Fowler</A></TD>
+</TR>
+<TR>
+<TD align=left></TD>
+<TD align=center></TD>
+<TD align=right>Information and Software Systems Research</TD>
+</TR>
+<TR>
+<TD align=left></TD>
+<TD align=center></TD>
+<TD align=right>AT&amp;T Labs Research</TD>
+</TR>
+<TR>
+<TD align=left></TD>
+<TD align=center></TD>
+<TD align=right>Florham Park NJ</TD>
+</TR>
+<TR>
+<TD align=left></TD>
+<TD align=center></TD>
+<TD align=right>March 22, 2011</TD>
+</TR>
+</TABLE>
+<P>
+
+</TD></TR></TBODY></TABLE>
+
+</BODY>
+</HTML>

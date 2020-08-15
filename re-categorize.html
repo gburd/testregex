@@ -1,0 +1,209 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Frameset//EN" "http://www.w3.org/TR/REC-html40/frameset.dtd">
+<HTML>
+<HEAD>
+<META name="generator" content="mm2html (AT&T Labs Research) 2005-10-15">
+<META name="keywords" content="regex implementation categorization">
+<TITLE> ../re/re-categorize.mm mm document </TITLE>
+<META name="author" content="gsf">
+</HEAD>
+<BODY bgcolor=white link=slateblue vlink=teal >
+<TABLE border=0 align=center width=96%>
+<TBODY><TR><TD valign=top align=left>
+<!--INDEX--><!--/INDEX-->
+<P>
+<HR>
+<CENTER>
+<H3><CENTER><FONT color=red><FONT face=courier>regex implementation categorization</FONT></FONT></CENTER></H3>
+<BR>Glenn Fowler <SMALL>&lt;<A href=mailto:gsf@research.att.com>gsf@research.att.com</A>&gt;</SMALL>
+<P><I>AT&amp;T Labs Research - Florham Park NJ</I>
+</CENTER>
+<P><HR><P>
+The
+<STRONG>regex</STRONG>
+tests in
+	<A href="http://web.archive.org/web/20080726034626id_/http://www.research.att.com/~gsf/testregex/categorize.dat">categorize.dat</A>
+attempt to categorize
+<STRONG>regex</STRONG>
+implementations.
+The tests do not address internationalization.
+All implementations report the leftmost match; this is omitted from the table.
+<P></P><TABLE border=0 frame=void rules=none width=100%><TBODY><TR><TD>
+<TABLE align=center bgcolor=papayawhip border=0 bordercolor=white cellpadding=2 cellspacing=2 frame=void rules=none >
+<TBODY>
+<TR><TD align=center>LABEL&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;ASSOC&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;SUBEXPR&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;REP_LONGEST&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;BUGS</TD></TR>
+<TR><TD align=center>
+A&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;precedence&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;-</TD></TR>
+<TR><TD align=center>
+B&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;grouping&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;repeat-null&nbsp;&nbsp;repeat-short&nbsp;&nbsp;repeat-artifact-nomatch</TD></TR>
+<TR><TD align=center>
+D&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;grouping&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;-</TD></TR>
+<TR><TD align=center>
+G&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;grouping&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;alternation-order&nbsp;&nbsp;repeat-null&nbsp;&nbsp;repeat-artifact&nbsp;&nbsp;repeat-artifact-nomatch</TD></TR>
+<TR><TD align=center>
+H&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;grouping&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;alternation-order&nbsp;&nbsp;nomatch-match&nbsp;&nbsp;repeat-null&nbsp;&nbsp;repeat-artifact&nbsp;&nbsp;repeat-artifact-nomatch</TD></TR>
+<TR><TD align=center>
+I&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;grouping&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;repeat-any&nbsp;&nbsp;repeat-short&nbsp;&nbsp;repeat-artifact-nomatch</TD></TR>
+<TR><TD align=center>
+J&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;precedence&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;last&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;nomatch-match&nbsp;&nbsp;repeat-artifact&nbsp;&nbsp;repeat-artifact-nomatch&nbsp;&nbsp;subexpression-first</TD></TR>
+<TR><TD align=center>
+M&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;precedence&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;last&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;range-null&nbsp;&nbsp;repeat-artifact&nbsp;&nbsp;repeat-artifact-nomatch&nbsp;&nbsp;subexpression-first</TD></TR>
+<TR><TD align=center>
+O&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;grouping&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;repeat-null&nbsp;&nbsp;repeat-short&nbsp;&nbsp;repeat-artifact-nomatch</TD></TR>
+<TR><TD align=center>
+P&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;grouping&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;alternation-order&nbsp;&nbsp;first-match&nbsp;&nbsp;repeat-null&nbsp;&nbsp;repeat-artifact</TD></TR>
+<TR><TD align=center>
+R&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;left&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;precedence&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;last&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;-</TD></TR>
+<TR><TD align=center>
+S&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;grouping&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;repeat-null&nbsp;&nbsp;repeat-short&nbsp;&nbsp;repeat-artifact-nomatch</TD></TR>
+<TR><TD align=center>
+T&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;left&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;precedence&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;last&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;-</TD></TR>
+<TR><TD align=center>
+U&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;precedence&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;repeat-null&nbsp;&nbsp;subexpression-first</TD></TR>
+<TR><TD align=center>
+darwin.ppc&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;grouping&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;repeat-null&nbsp;&nbsp;repeat-short</TD></TR>
+<TR><TD align=center>
+freebsd.i386&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;grouping&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;repeat-null&nbsp;&nbsp;repeat-short</TD></TR>
+<TR><TD align=center>
+hp.pa&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;grouping&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;repeat-artifact</TD></TR>
+<TR><TD align=center>
+ibm.risc&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;grouping&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;alternation-order&nbsp;&nbsp;nomatch-match&nbsp;&nbsp;repeat-artifact&nbsp;&nbsp;repeat-artifact-nomatch</TD></TR>
+<TR><TD align=center>
+linux.i386&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;grouping&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;alternation-order&nbsp;&nbsp;repeat-artifact&nbsp;&nbsp;repeat-null</TD></TR>
+<TR><TD align=center>
+sgi.mips3&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;grouping&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;repeat-short</TD></TR>
+<TR><TD align=center>
+sol8.sun4&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;grouping&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;alternation-order&nbsp;&nbsp;nomatch-match&nbsp;&nbsp;repeat-artifact</TD></TR>
+<TR><TD align=center>
+unixware.i386&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;right&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;precedence&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;first&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;repeat-null&nbsp;&nbsp;subexpression-first</TD></TR>
+</TBODY></TABLE></TD></TR></TBODY></TABLE>
+<P>
+The categories are:
+<DL COMPACT>
+<DL COMPACT>
+<DT><STRONG>LABEL</STRONG><DD>
+The implementation label from
+	<A href="http://web.archive.org/web/20080726034626id_/http://www.research.att.com/~gsf/testregex/">testregex.</A>
+<DT><STRONG>ASSOC</STRONG><DD>
+Subpattern (or atom) associativity: either
+<STRONG>left</STRONG>
+or
+<STRONG>right</STRONG>.
+The subexpression match rule in the rationale requires
+<STRONG>right</STRONG>
+for expressions where each concatenated part is a subexpression.
+There is no definition for
+<EM>subpattern</EM>,
+but it would be inconsistent for any definition to require different
+associativity than that for subexpressions.
+Some claim that the BRE and ERE grammars specify
+<STRONG>left</STRONG>
+associativity, but this interpretation disregards
+the subexpression match rule in the rationale.
+The grammar can also be interpreted to support
+<STRONG>right</STRONG>
+associativity, and this interpretation is in accord with the rationale.
+<DT><STRONG>SUBEXPR</STRONG><DD>
+Subexpression semantics:
+<STRONG>precedence</STRONG>
+if subexpressions can override the default associativity;
+<STRONG>grouping</STRONG>
+if subexpressions are for repetition and
+<STRONG>regmatch_t</STRONG>
+grouping only.
+The subexpression match rule in the rationale requires
+<STRONG>precedence</STRONG>.
+<DT><STRONG>REP_LONGEST</STRONG><DD>
+How repeated subexpressions that match more than once are handled:
+<STRONG>first</STRONG>
+if the longest possible matches occur first;
+<STRONG>last</STRONG>
+if the longest possible matches occur last;
+<STRONG>unknown</STRONG>
+otherwise.
+The subexpression match rule in the rationale requires
+<STRONG>first</STRONG>.
+<DT><STRONG>BUGS</STRONG><DD>
+Miscellaneous bugs (see
+	<A href="http://web.archive.org/web/20080726034626id_/http://www.research.att.com/~gsf/testregex/categorize.dat">categorize.dat</A>
+for specific examples):
+<DL COMPACT>
+<DL COMPACT>
+<DT><STRONG>alternation-order</STRONG><DD>
+A change in the order of subexpression alternation operands,
+<EM>not involved in a tie</EM>,
+changes
+<STRONG>regmatch_t</STRONG>
+values.
+Some implementations with this bug can be coaxed into missing the
+overall longest match.
+<DT><STRONG>first-match</STRONG><DD>
+The first of the leftmost matches, instead of the longest of the
+leftmost matches, is returned.
+<DT><STRONG>nomatch-match</STRONG><DD>
+A back-reference to a
+<STRONG>regmatch_t</STRONG>
+(-1,-1) value is treated as matching.
+<DT><STRONG>range-null</STRONG><DD>
+A range-repeated subexpression that matches null does not report the match
+at offset (0,0).
+<DT><STRONG>repeat-artifact</STRONG><DD>
+A
+<STRONG>regmatch_t</STRONG>
+value is reported for a repeated match that is not the last match.
+<DT><STRONG>repeat-artifact-nomatch</STRONG><DD>
+To prevent not matching,
+a
+<STRONG>regmatch_t</STRONG>
+value is reported for a repeated match that is not the last match.
+<DT><STRONG>repeat-null</STRONG><DD>
+A repeated subexpression matches the null string even though it is not
+the only match and is not necessary to satisfy the exact or minimum
+number of occurrences for an interval expression.
+<DT><STRONG>repeat-short</STRONG><DD>
+Incorrect
+<STRONG>regmatch_t</STRONG>
+values for a repeated subexpression.
+This may be a variant of
+<STRONG>repeat-artifact</STRONG>.
+<DT><STRONG>subexpression-first</STRONG><DD>
+A subexpression match takes precedence over a subpattern
+to its left.
+</DL>
+</DL>
+</DL>
+</DL>
+<P>
+<HR>
+<TABLE border=0 align=center width=96%>
+<TR>
+<TD align=left></TD>
+<TD align=center></TD>
+<TD align=right><A href="mailto:gsf@research.att.com?subject= ../re/re-categorize.mm mm document">Glenn Fowler</A></TD>
+</TR>
+<TR>
+<TD align=left></TD>
+<TD align=center></TD>
+<TD align=right>Information and Software Systems Research</TD>
+</TR>
+<TR>
+<TD align=left></TD>
+<TD align=center></TD>
+<TD align=right>AT&amp;T Labs Research</TD>
+</TR>
+<TR>
+<TD align=left></TD>
+<TD align=center></TD>
+<TD align=right>Florham Park NJ</TD>
+</TR>
+<TR>
+<TD align=left></TD>
+<TD align=center></TD>
+<TD align=right>June 01, 2004</TD>
+</TR>
+</TABLE>
+<P>
+
+</TD></TR></TBODY></TABLE>
+
+</BODY>
+</HTML>

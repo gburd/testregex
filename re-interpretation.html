@@ -1,0 +1,997 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Frameset//EN" "http://www.w3.org/TR/REC-html40/frameset.dtd">
+<HTML>
+<HEAD>
+<META name="generator" content="mm2html (AT&T Research) 2010-09-10">
+<META name="keywords" content="regex regular expression standard interpretation">
+<TITLE> ../re/re-interpretation.mm mm document </TITLE>
+<META name="author" content="gsf">
+</HEAD>
+<BODY bgcolor=white link=slateblue vlink=teal >
+<TABLE border=0 align=center width=96%>
+<TBODY><TR><TD valign=top align=left>
+<!--INDEX--><!--/INDEX-->
+<B><FONT size=-1 face="verdana,arial,helvetica,geneva,sans-serif">
+<TABLE align=center cellpadding=2 border=4 bgcolor=lightgrey><TR>
+<TD><A href="re-interpretation.html#Abstract">Abstract</A></TD>
+<TD><A href="re-interpretation.html#Background">Background</A></TD>
+<TD><A href="re-interpretation.html#Notation">Notation</A></TD>
+<TD><A href="re-interpretation.html#regex Glossary">regex Glossary</A></TD>
+<TD><A href="re-interpretation.html#A subexpression is ">A subexpression is </A></TD>
+<TD><A href="re-interpretation.html#A subpattern is ">A subpattern is </A></TD>
+<TD><A href="re-interpretation.html#The Dark Corners ">The Dark Corners </A></TD>
+<TD><A href="re-interpretation.html#Conclusion">Conclusion</A></TD>
+</TR></TABLE>
+</FONT></B>
+<P>
+<HR>
+<CENTER>
+<H3><CENTER><FONT color=red><FONT face=courier>An Interpretation of the POSIX regex Standard</FONT></FONT></CENTER></H3>
+<BR>Glenn Fowler <SMALL>&lt;<A href=mailto:gsf@research.att.com>gsf@research.att.com</A>&gt;</SMALL>
+<P><I>AT&amp;T Research - Florham Park NJ</I>
+</CENTER>
+<P>
+<CENTER><FONT color=red><FONT face=courier><H3 align=center><A name="Abstract">Abstract</A></H3></FONT></FONT></CENTER>
+Many passages in the POSIX
+<STRONG>regex</STRONG>
+standard seem to be open for interpretation.
+Differences between several published
+	<A href="http://www.research.att.com/~gsf/testregex/" target=_top>implementations</A>
+of the
+<STRONG>regex</STRONG>
+API bear this out.
+Instead of relegating these differences to the
+<EM>undefined behavior</EM>
+bucket, this paper proposes a resolution to each
+by direct application of the standard text.
+
+<P>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="Background">Background</A></H3></FONT></FONT></CENTER>
+The POSIX
+<STRONG>regex</STRONG>
+standard is spread across four documents:
+<P></P><TABLE border=0 frame=void rules=none width=100%><TBODY><TR><TD>
+<TABLE align=center bgcolor=papayawhip border=0 bordercolor=white cellpadding=2 cellspacing=2 >
+<TBODY>
+<TR><TD align=right>
+glossary&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;G&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;<A href="http://www.opengroup.org/onlinepubs/007904975/basedefs/xbd_chap03.html" target=_top>http://www.opengroup.org/onlinepubs/007904975/basedefs/xbd_chap03.html</A></TD></TR>
+<TR><TD align=right>
+api&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;A&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;<A href="http://www.opengroup.org/onlinepubs/007904975/functions/regcomp.html" target=_top>http://www.opengroup.org/onlinepubs/007904975/functions/regcomp.html</A></TD></TR>
+<TR><TD align=right>
+definition&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;D&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;<A href="http://www.opengroup.org/onlinepubs/007904975/basedefs/xbd_chap09.html" target=_top>http://www.opengroup.org/onlinepubs/007904975/basedefs/xbd_chap09.html</A></TD></TR>
+<TR><TD align=right>
+rationale&nbsp;&nbsp;</TD><TD align=center>&nbsp;&nbsp;R&nbsp;&nbsp;</TD><TD align=left>&nbsp;&nbsp;<A href="http://www.opengroup.org/onlinepubs/007904975/xrat/xbd_chap09.html" target=_top>http://www.opengroup.org/onlinepubs/007904975/xrat/xbd_chap09.html</A></TD></TR>
+</TBODY></TABLE></TD></TR></TBODY></TABLE>
+<P>
+It describes
+<STRONG>BRE</STRONG>s
+(basic regular expressions, a.k.a.,
+<NOBR><A href="http://web.archive.org/~gsf/man/man1/grep.html"><STRONG>grep</STRONG></A>(1)</NOBR>
+style) and
+<STRONG>ERE</STRONG>s
+(extended regular expressions, a.k.a.,
+<NOBR><A href="http://web.archive.org/~gsf/man/man1/egrep.html"><STRONG>egrep</STRONG></A>(1)</NOBR>
+style)
+and how an RE of each type matches subject strings.
+The standard also provides an API:
+<NOBR><A href="http://web.archive.org/~gsf/man/man3/regcomp.html"><STRONG>regcomp</STRONG></A>(3)</NOBR>
+for compiling an RE, and
+<NOBR><A href="http://web.archive.org/~gsf/man/man3/regexec.html"><STRONG>regexec</STRONG></A>(3)</NOBR>
+for matching a compiled RE against a subject string.
+The
+<STRONG>regexec</STRONG>
+API
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+   int regexec(const regex_t* restrict preg, const char* restrict string,
+               size_t nmatch, regmatch_t pmatch&#0091;restrict&#0093;, int eflags);
+</DIV>
+</PRE>
+is at the center of multiple, conflicting interpretations of the standard.
+These interpretations differ on the setting of the
+<TT>pmatch&#0091;&#0093;</TT>
+array for index values &gt; 0.
+This note presents examples that demonstrate interpretation conflicts,
+and then provides standard references that,
+<EM>when taken as a whole</EM>,
+resolve the conflicts.
+
+<P>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="Notation">Notation</A></H3></FONT></FONT></CENTER>
+Standard references use the notation
+&#0091;<EM>document</EM>:<EM>begin</EM>&#0091;-<EM>end</EM>&#0093;&#0093;
+where
+<EM>document</EM>
+is the document letter, { A D G R }, from the table above,
+<EM>begin</EM>
+is the beginning line number, and
+<EM>end</EM>
+is the ending line number.
+Line numbers are taken from the 2001 X/Open printing.
+Unfortunately the online links do not display line numbers.
+For example, &#0091;A:37179-37180&#0093; is the reference for the
+<STRONG>regexec</STRONG>
+API prototype above.
+<P>
+Example patterns, subject strings, and
+<TT>pmatch&#0091;&#0093;</TT>
+array values use the regression test notation of
+	<A href="http://www.research.att.com/~gsf/testregex/" target=_top>testregex.</A>
+You can download the source and compile it against your favorite regex
+implementation.
+All of the examples in this note have been placed in the file
+	<A href="http://www.research.att.com/~gsf/testregex/interpretation.dat" target=_top>interpretation.dat;</A>
+you can download this file and use it as input to
+<STRONG>testregex</STRONG>.
+For example, the
+<STRONG>testregex</STRONG>
+input
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#01:E	a+			xaax	(1,3)
+</DIV>
+</PRE>
+specifies that the ERE pattern "a+" matched against the
+subject string "xaax" yields
+<TT>pmatch&#0091;0&#0093;.rm_so==1</TT>
+and
+<TT>pmatch&#0091;0&#0093;.rm_eo==3</TT>.
+The example is labeled RE#01 for indexing and referencing.
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#02:B	.&#0092;(a*&#0092;).		xaax	(0,4)(1,3)
+</DIV>
+</PRE>
+specifies that the BRE pattern ".&#0092;(a*&#0092;)." matched against the subject
+string "xaax" yields
+<TT>pmatch&#0091;0&#0093;.rm_so==0</TT>,
+<TT>pmatch&#0091;0&#0093;.rm_eo==4</TT>,
+<TT>pmatch&#0091;1&#0093;.rm_so==1</TT>,
+<TT>pmatch&#0091;1&#0093;.rm_eo==3</TT>.
+(?,?) denotes
+<TT>rm_so</TT>
+and
+<TT>rm_eo</TT>
+values of -1, i.e., a non-match.
+The first field allows additional flags that exercise all of the
+<STRONG>REG_*</STRONG>
+<STRONG>regcomp</STRONG>
+and
+<STRONG>regexec</STRONG>
+flags; see
+<NOBR><A href="http://web.archive.org/~gsf/man/man1/testregex.html"><STRONG>testregex</STRONG></A>(1)</NOBR>
+or
+<STRONG>testregex --man</STRONG>
+for details.
+Note that
+<STRONG>tab</STRONG>
+is the field separator in the
+<STRONG>testregex</STRONG>
+syntax; if you mouse snarf then make sure that
+<STRONG>tabs</STRONG>
+are preserved.
+
+<P>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="regex Glossary">regex Glossary</A></H3></FONT></FONT></CENTER>
+<DIV style="padding-left:16px;text-indent:0px">
+<DL COMPACT>
+<DT>&#0091;G:41&#0093;<STRONG>Basic Regular Expression (BRE)</STRONG><DD>
+A regular expression used by the majority of utilities that select strings
+from a set of character strings. 
+<DT>&#0091;G:148&#0093;<STRONG>Entire Regular Expression</STRONG><DD>
+The concatenated set of one or more basic regular expressions or extended
+regular expressions that make up the pattern specified for string selection. 
+<DT>&#0091;G:158&#0093;<STRONG>Extended Regular Expression (ERE)</STRONG><DD>
+A regular expression that is an alternative to the Basic Regular
+Expression using a more extensive syntax, occasionally used by some utilities. 
+<DT>&#0091;G:269&#0093;<STRONG>Pattern</STRONG><DD>
+A sequence of characters used either with regular expression notation or for
+pathname expansion, as a means of selecting various character strings or
+pathnames, respectively. 
+<DT>&#0091;G:316&#0093;<STRONG>Regular Expression</STRONG><DD>
+A pattern that selects specific strings from a set of character strings. 
+</DL>
+</DIV>
+
+<P>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="A subexpression is ">A subexpression is </A></H3></FONT></FONT></CENTER>
+The
+<STRONG>regex</STRONG>
+standard is surprisingly cavalier with terminology:
+some terms are used interchangeably, some are used in a general context
+in one section and a specific context in another, and some are
+used without any definition whatsoever.
+Acutely subject to this abuse are:
+<EM>RE</EM>,
+<EM>pattern</EM>,
+<EM>subpattern</EM>,
+<EM>expression</EM>,
+and
+<EM>subexpression</EM>.
+In particular,
+<EM>subpattern</EM>
+and
+<EM>subexpression</EM>
+are central to the description of the matching algorithm and how
+<TT>pmatch&#0091;&#0093;</TT>
+is assigned.
+Any interpretation of the
+<STRONG>regex</STRONG>
+standard involving these terms, absent a precise and accurate definition
+for each, is useless.
+<P>
+<EM>subexpression</EM>
+appears 70 times, and each reference is in the context of parenthesis grouping:
+<DIV style="padding-left:16px;text-indent:0px">
+<DL COMPACT>
+<DT>&#0091;D:5909-5911&#0093;<DD>
+For example, matching the BRE "&#0092;(.*&#0092;).*" against "abcdef" , the
+subexpression "(&#0092;1)" is "abcdef" , and matching the BRE
+"&#0092;(a*&#0092;)*" against "bc" , the subexpression "(&#0092;1)" is the null
+string.
+<DT>&#0091;D:5984-5988&#0093;<DD>
+The asterisk shall be special except when used: As the first
+character of a subexpression (after an initial '^' , if any);
+<DT>&#0091;D:6094-6097&#0093;<DD>
+A subexpression can be defined within a BRE by enclosing it
+between the character pairs "&#0092;(" and "&#0092;)" . Subexpressions can
+be arbitrarily nested.
+<DT>&#0091;D:6100-6109&#0093;<DD>
+The character 'n' shall be a digit from 1 through 9, specifying
+the nth subexpression (the one that begins with the nth "&#0092;("
+from the beginning of the pattern and ends with the
+corresponding paired "&#0092;)" ). The expression is invalid if less
+than n subexpressions precede the '&#0092;n' . For example, the
+expression "&#0092;(.*&#0092;)&#0092;1$" matches a line consisting of two
+adjacent appearances of the same string, and the expression
+"&#0092;(a&#0092;)*&#0092;1" fails to match 'a' . When the referenced
+subexpression matched more than one string, the back-referenced
+expression shall refer to the last matched string. If the
+subexpression referenced by the back-reference matches more
+than one string because of an asterisk ( '*' ) or an interval
+expression (see item (5)), the back-reference shall match the
+last (rightmost) of these strings.
+<DT>&#0091;D:6110-6112&#0093;<DD>
+When a BRE matching a single character, a subexpression, or a
+back-reference is followed by the special character asterisk ('*' ),
+together with that asterisk it shall match what zero or
+more consecutive occurrences of the BRE would match.
+<DT>&#0091;D:6114-6117&#0093;<DD>
+When a BRE matching a single character, a subexpression, or a
+back-reference is followed by an interval expression of the
+format "&#0092;{m&#0092;}" , "&#0092;{m,&#0092;}" , or "&#0092;{m,n&#0092;}" , together with that
+interval expression it shall match what repeated consecutive
+occurrences of the BRE would match. "&#0092;{m,n&#0092;}" , together with
+that interval expression it shall match what repeated
+consecutive occurrences of the BRE would match.
+<DT>&#0091;D:6127-6129&#0093;<DD>
+A subexpression repeated by an asterisk ('*') or an interval expression
+shall not match a null expression unless this is the only match for the
+repetition or it is necessary to satisfy the exact or minimum number of
+occurrences for the interval expression.
+<DT>&#0091;D:6136&#0093;<DD>
+Subexpressions/back-references &#0092;(&#0092;) &#0092;n
+<DT>&#0091;D:6145-6151&#0093;<DD>
+The implementation may treat the circumflex as an anchor when
+used as the first character of a subexpression. The circumflex
+shall anchor the
+expression (or optionally subexpression) to the beginning of a
+string; only sequences starting at the first character of a
+string shall be matched by the BRE. For example, the BRE "^ab"
+matches "ab" in the string "abcdef" , but fails to match in the
+string "cdefab" . The BRE "&#0092;(^ab&#0092;)" may match the former
+string. A portable BRE shall escape a leading circumflex in a
+subexpression to match a literal circumflex.
+<DT>&#0091;D:6152-6156&#0093;<DD>
+A dollar sign ( '$' ) shall be an anchor when used as the last
+character of an entire BRE. The implementation may treat a
+dollar sign as an anchor when used as the last character of a
+subexpression. The dollar sign shall anchor the expression (or
+optionally subexpression) to the end of the string being matched;
+the dollar sign can be said to match the end-of-string following
+the last character.
+<DT>&#0091;D:6265-6270&#0093;<DD>
+A circumflex ( '^' ) outside a bracket expression shall anchor
+the expression or subexpression it begins to the beginning of a
+string; such an expression or subexpression can match only a
+sequence starting at the first character of a string. For
+example, the EREs "^ab" and "(^ab)" match "ab" in the string
+"abcdef" , but fail to match in the string "cdefab" , and the
+ERE "a^b" is valid, but can never match because the 'a'
+prevents the expression "^b" from matching starting at the
+first character.
+<DT>&#0091;D:6271-6276&#0093;<DD>
+A dollar sign ( '$' ) outside a bracket expression shall anchor
+the expression or subexpression it ends to the end of a string;
+such an expression or subexpression can match only a sequence
+ending at the last character of a string. For example, the EREs
+"ef$" and "(ef$)" match "ef" in the string "abcdef" , but fail
+to match in the string "cdefab" , and the ERE "e$f" is valid,
+but can never match because the 'f' prevents the expression
+"e$" from matching ending at the last character.
+<DT>&#0091;R:2359-2370&#0093;<DD>
+It is possible to determine what strings correspond to
+subexpressions by recursively applying the leftmost longest
+rule to each subexpression, but only with the proviso that the
+overall match is leftmost longest. For example, matching
+"&#0092;(ac*&#0092;)c*d&#0091;ac&#0093;*&#0092;1" against acdacaaa matches acdacaaa (with
+&#0092;1=a); simply matching the longest match for "&#0092;(ac*&#0092;)" would
+yield &#0092;1=ac, but the overall match would be smaller (acdac).
+Conceptually, the implementation must examine every possible
+match and among those that yield the leftmost longest total
+matches, pick the one that does the longest match for the
+leftmost subexpression, and so on. Note that this means that
+matching by subexpressions is context-dependent: a
+subexpression within a larger RE may match a different string
+from the one it would match as an independent RE, and two
+instances of the same subexpression within the same larger RE
+may match different lengths even in similar sequences of
+characters. For example, in the ERE "(a.*b)(a.*b)" , the two
+identical subexpressions would match four and six characters,
+respectively, of accbaccccb.
+<DT>&#0091;R:2512-2520&#0093;<DD>
+The limit of nine back-references to subexpressions in the RE
+is based on the use of a single-digit identifier; increasing
+this to multiple digits would break historical applications.
+This does not imply that only nine subexpressions are allowed
+in REs. The following is a valid BRE with ten subexpressions:
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+&#0092;(&#0092;(&#0092;(ab&#0092;)*c&#0092;)*d&#0092;)&#0092;(ef&#0092;)*&#0092;(gh&#0092;)&#0092;{2&#0092;}&#0092;(ij&#0092;)*&#0092;(kl&#0092;)*&#0092;(mn&#0092;)*&#0092;(op&#0092;)*&#0092;(qr&#0092;)*
+</DIV>
+</PRE>
+The standard developers regarded the common historical
+behavior, which supported "&#0092;n*" , but not "&#0092;n&#0092;{min,max&#0092;}" ,
+"&#0092;(...&#0092;)*" , or "&#0092;(...&#0092;)&#0092;{min,max&#0092;}" , as a non-intentional
+result of a specific implementation, and they supported both
+duplication and interval expressions following subexpressions
+and back-references.
+<DT>&#0091;R:2537-2544&#0093;<DD>
+However, one relatively uncommon case was changed to allow an
+extension used on some implementations. Historically, the BREs
+"^foo" and "&#0092;(^foo&#0092;)" did not match the same string, despite
+the general rule that subexpressions and entire BREs match the
+same strings. To increase consensus, IEEE Std 1003.1-2001 has
+allowed an extension on some implementations to treat these two
+cases in the same way by declaring that anchoring may occur at
+the beginning or end of a subexpression. Therefore, portable
+BREs that require a literal circumflex at the beginning or a
+dollar sign at the end of a subexpression must escape them.
+Note that a BRE such as "a&#0092;(^bc&#0092;)" will either match "a^bc" or
+nothing on different systems under the rules.
+<DT>&#0091;R:2549-2554&#0093;<DD>
+Some implementations have extended the BRE syntax to add
+alternation. For example, the subexpression "&#0092;(foo$&#0092;|bar&#0092;)"
+would match either "foo" at the end of the string or "bar"
+anywhere. The extension is triggered by the use of the
+undefined "&#0092;|" sequence. Because the BRE is undefined for
+portable scripts, the extending system is free to make other
+assumptions, such that the '$' represents the end-of-line
+anchor in the middle of a subexpression. If it were not for the
+extension, the '$' would match a literal dollar sign under the
+rules.
+<DT>&#0091;R:2617-2620&#0093;<DD>
+The removal of the Back_open_paren Back_close_paren option from
+the nondupl_RE specification is the result of PASC
+Interpretation 1003.2-92 #43 submitted for the ISO POSIX-2:1993
+standard. Although the grammar required support for null
+subexpressions, this section does not describe the meaning of,
+and historical practice did not support, this construct.
+<DT>&#0091;A:37188&#0093;<DD>
+size_t re_nsub Number of parenthesized subexpressions
+<DT>&#0091;A:37206-37208&#0093;<DD>
+If the REG_NOSUB flag was not set in cflags, then regcomp()
+shall set re_nsub to the number of parenthesized subexpressions
+(delimited by "&#0092;(&#0092;)" in basic regular expressions or "()" in
+extended regular expressions) found in pattern.
+<DT>&#0091;A:37220-37257&#0093;<DD>
+If nmatch is 0 or REG_NOSUB was set in the cflags argument to
+regcomp(), then regexec() shall ignore the pmatch argument.
+Otherwise, the application shall ensure that the pmatch
+argument points to an array with at least nmatch elements, and
+regexec() shall fill in the elements of that array with offsets
+of the substrings of string that correspond to the
+parenthesized subexpressions of pattern: pmatch&#0091;i&#0093;.rm_so
+shall be the byte offset of the beginning and pmatch&#0091;i&#0093;.rm_eo
+shall be one greater than the byte offset of the end of
+substring i. (Subexpression i begins at the ith matched open
+parenthesis, counting from 1.) Offsets in pmatch&#0091;0&#0093; identify
+the substring that corresponds to the entire regular
+expression. Unused elements of pmatch up to pmatch&#0091;nmatch-1&#0093;
+shall be filled with -1. If there are more than nmatch
+subexpressions in pattern ( pattern itself counts as a
+subexpression), then regexec() shall still do the match, but
+shall record only the first nmatch substrings.
+<P>
+When matching a basic or extended regular expression, any given
+parenthesized subexpression of pattern might participate in the
+match of several different substrings of string, or it might
+not match any substring even though the pattern as a whole did
+match. The following rules shall be used to determine which
+substrings to report in pmatch when matching regular
+expressions:
+<DIV style="padding-left:16px;text-indent:0px">
+<OL>
+<LI>
+If subexpression i in a regular expression is not contained
+within another subexpression, and it participated in the match
+several times, then the byte offsets in pmatch&#0091;i&#0093; shall
+delimit the last such match.
+<LI>
+If subexpression i is not contained within another
+subexpression, and it did not participate in an otherwise
+successful match, the byte offsets in pmatch&#0091;i&#0093; shall be -1. A
+subexpression does not participate in the match when:
+<PRE>
+&nbsp;'*' or "&#0092;{&#0092;}" appears immediately after the
+subexpression in a basic regular expression, or '*' ,
+&nbsp;'?' , or "{}" appears immediately after the
+subexpression in an extended regular expression, and
+the subexpression did not match (matched 0 times)
+<P>
+or:
+<P>
+&nbsp;'|' is used in an extended regular expression to select
+this subexpression or another, and the other
+subexpression matched.
+</PRE>
+<LI>
+If subexpression i is contained within another subexpression
+j, and i is not contained within any other subexpression that
+is contained within j, and a match of subexpression j is
+reported in pmatch&#0091;j&#0093;, then the match or non-match of
+subexpression i reported in pmatch&#0091;i&#0093; shall be as described in
+1. and 2. above, but within the substring reported in pmatch&#0091;
+j&#0093; rather than the whole string. The offsets in pmatch&#0091;i&#0093; are
+still relative to the start of string.
+<LI>
+If subexpression i is contained in subexpression j, and the
+byte offsets in pmatch&#0091;j&#0093; are -1, then the pointers in pmatch&#0091;
+i&#0093; shall also be -1.
+<LI>
+If subexpression i matched a zero-length string, then both
+byte offsets in pmatch&#0091;i&#0093; shall be the byte offset of the
+character or null terminator immediately following the
+zero-length string.
+</OL>
+</DIV>
+<DT>&#0091;A:37363-37366&#0093;<DD>
+The regexec() function must fill in all nmatch elements of
+pmatch, where nmatch and pmatch are supplied by the
+application, even if some elements of pmatch do not correspond
+to subexpressions in pattern. The application writer should
+note that there is probably no reason for using a value of
+nmatch that is larger than preg-&gt; re_nsub+1.
+<DT>&#0091;A:37407-37413&#0093;<DD>
+The number of subexpressions in the RE is reported in re_nsub
+in preg. With this change to regexec(), consideration was given
+to dropping the REG_NOSUB flag since the user can now specify
+this with a zero nmatch argument to regexec(). However, keeping
+REG_NOSUB allows an implementation to use a different (perhaps
+more efficient) algorithm if it knows in regcomp() that no
+subexpressions need be reported. The implementation is only
+required to fill in pmatch if nmatch is not zero and if
+REG_NOSUB is not specified.
+</DL>
+</DIV>
+<P>
+This sentence is as close as the standard gets to a definition:
+<DIV style="padding-left:16px;text-indent:0px">
+<DL COMPACT>
+<DT>&#0091;A:37225-37226&#0093;<DD>
+Subexpression i begins at the ith matched open parenthesis, counting from 1.
+</DL>
+</DIV>
+<P>
+Using nonterminals from the BRE &#0091;D:6371-6731&#0093; and ERE &#0091;D:6452-6452&#0093; grammar
+productions (text not listed in this document) yields the following:
+<DIV style="padding-left:16px;text-indent:0px">
+<DL COMPACT>
+<DT><STRONG>DEFINITION</STRONG><DD>
+A
+<EM>subexpression</EM>
+corresponds to the
+<TT>Back_open_paren RE_expression Back_close_paren</TT>
+form of the
+<TT>nondupl_RE</TT>
+BRE grammar production or
+the
+<TT>'(' extended_reg_exp ')'</TT>
+form of the
+<TT>ERE_expression</TT>
+ERE grammar production.
+Subexpression i begins at the ith matched open parenthesis
+(<TT>Back_open_paren</TT>
+for BREs and '(' for EREs),
+starting from the left and counting from 1.
+Subexpression 0 is the entire RE.
+</DL>
+</DIV>
+<P>
+This definition and the subexpression match rule &#0091;R:2359-2370&#0093; can be used to
+to examine a class of EREs where the top level catenation operands are
+subexpressions.
+(A top level subexpression is not contained in any other subexpression
+except subexpression 0.)
+The subexpression match rule in pseudo code is:
+<UL type=square>
+<LI>
+determine the longest of the leftmost matches for subexpression-0
+&#0091;R:2359-2361&#0093;
+<LI>
+for 1&lt;=<EM>i</EM>&lt;=<STRONG>re_nsub</STRONG>
+determine the longest match for
+subexpression-<EM>i</EM>
+consistent with the matches already determined for
+subexpression-<EM>j,</EM>
+0&lt;=<EM>j</EM>&lt;<EM>i</EM>.
+&#0091;R:2359-2370&#0093; &#0091;A:37235-37257&#0093;
+</UL>
+For example, given
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#03:E	(a?)((ab)?)		ab	(0,2)(0,0)(0,2)(0,2)
+</DIV>
+</PRE>
+the subexpressions are:
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+subexpression-0	(a?)((ab)?)
+subexpression-1	(a?)
+subexpression-2	((ab)?)
+subexpression-3	(ab)
+</DIV>
+</PRE>
+The longest of the leftmost matches for subexpression-0 is (0,2).
+The longest match for subexpression-1, consistent with the match
+for subexpression-0, is (0,0); otherwise if it had matched (0,1) then
+subexpression-2 would not match and the subexpression-0 match would be
+limited to (0,1).
+The longest match for subexpression-2, consistent with the matches
+for subexpression-0 and subexpression-1, is (0,2).
+The longest match for subexpression-3, consistent with the matches
+for subexpression-0, subexpression-1 and subexpression-2, is (0,2).
+This table illustrates the matching:
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+subexpr	pattern			match
+   0	(a?)((ab)?)		(0,2)
+   1	(a?)			(0,0)
+   2	((ab)?)			(0,2)
+   3	(ab)			(0,2)
+</DIV>
+</PRE>
+RE#04 is a similar example that exposes the associativity of subexpression
+concatenation:
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#04:E	(a?)((ab)?)(b?)		ab	(0,2)(0,1)(1,1)(?,?)(1,2)
+
+subexpr	pattern			match
+   0	(a?)((ab)?)(b?)		(0,2)
+   1	(a?)			(0,1)
+   2	((ab)?)			(1,1)
+   3	(ab)			(?,?)
+   4	(b?)			(1,2)
+</DIV>
+</PRE>
+&#0091;R:2363-2365&#0093; also shows that parenthesis can be used to alter the 
+order of matching:
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#05:E	((a?)((ab)?))(b?)	ab	(0,2)(0,2)(0,0)(0,2)(0,2)(2,2)
+
+subexpr	pattern			match
+   0	((a?)((ab)?))(b?)	(0,2)
+   1	((a?)((ab)?))		(0,2)
+   2	(a?)			(0,0)
+   3	((ab)?)			(0,2)
+   4	(ab)			(0,2)
+   5	(b?)			(2,2)
+</DIV>
+</PRE>
+In RE#05 the extra parenthesis (around subexpression-1 and subexpression-2 in
+RE#04) form a new subexpression-1, and change the
+match for the last subexpression
+<TT>(b?)</TT>
+to (2,2) (from (1,2) in RE#04.)
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#06:E	(a?)(((ab)?)(b?))	ab	(0,2)(0,1)(1,2)(1,1)(?,?)(1,2)
+
+subexpr	pattern			match
+   0	(a?)(((ab)?)(b?))	(0,2)
+   1	(a?)			(0,1)
+   2	(((ab)?)(b?))		(1,2)
+   3	((ab)?)			(1,1)
+   4	(ab)			(?,?)
+   5	(b?)			(1,2)
+</DIV>
+</PRE>
+In RE#06 the extra parenthesis pair forces right associativity and results
+in the same match of (1,2) for the last subexpression
+<TT>(b?)</TT>
+as in RE#04.
+These examples show that:
+<DIV style="padding-left:16px;text-indent:0px">
+<DL COMPACT>
+<DT><STRONG>PROPERTY</STRONG><DD>
+Subexpression grouping can alter the precedence of concatenation.
+<DT><STRONG>PROPERTY</STRONG><DD>
+Subexpression concatenation is right associative.
+</DL>
+</DIV>
+<P>
+The following examples examine replicated subexpressions.
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#07:E	(.?)			x	(0,1)(0,1)
+:RE#08:E	(.?){1}			x	(0,1)(0,1)
+:RE#09:E	(.?)(.?)		x	(0,1)(0,1)(1,1)
+:RE#10:E	(.?){2}			x	(0,1)(1,1)
+:RE#11:E	(.?)*			x	(0,1)(0,1)
+</DIV>
+</PRE>
+&#0091;D:6227-6234&#0093; specifies that RE#07 and RE#08 are equivalent, and that
+RE#09 and RE#10 are equivalent, and
+&#0091;D:6217-6219&#0093; specifies that RE#09 and RE#11 are equivalent.
+<DIV style="padding-left:16px;text-indent:0px">
+<DL COMPACT>
+<DT>&#0091;D:6227-6234&#0093;<DD>
+When an ERE matching a single character or an ERE enclosed in
+parentheses is followed by an interval expression of the format "{m}" ,
+"{m,}" , or "{m,n}" , together with that interval expression it shall
+match what repeated consecutive occurrences of the ERE would match. The
+values of m and n are decimal integers in the range 0 &lt;= m&lt;= n&lt;=
+{RE_DUP_MAX}, where m specifies the exact or minimum number of
+occurrences and n specifies the maximum number of occurrences. The
+expression "{m}" matches exactly m occurrences of the preceding ERE,
+"{m,}" matches at least m occurrences, and "{m,n}" matches any number
+of occurrences between m and n, inclusive.
+<DT>&#0091;D:6217-6219&#0093;<DD>
+When an ERE matching a single character or an ERE enclosed in
+parentheses is followed by the special character asterisk ( '*' ),
+together with that asterisk it shall match what zero or more
+consecutive occurrences of the ERE would match.
+</DL>
+</DIV>
+In RE#09 subexpression-1 matches (0,1), leaving the null string at (1,1) for
+subexpression-2.
+In RE#10 the first iteration of subexpression-1 matches (0,1), the same
+as subexpression-1 in RE#09, and the second iteration of subexpression-1
+matches (1,1), the same as subexpression-2 in RE#09.
+RE#07 and RE#08 show that only one iteration is needed to match the subject
+string, so the match in RE#11 requires only one iteration, and as such is the
+last iteration of &#0091;D:6107-6109&#0093; &#0091;A:37235-37237&#0093;.
+RE#10 and RE#11 also illustrate &#0091;D:6127-6129&#0093; &#0091;D:6239-6241&#0093;, which
+specify that a repeated RE matches the null string only if it is the only
+match (not this case) or if it is necessary to satisfy an interval expression
+minimum (2 in this case.)
+<DIV style="padding-left:16px;text-indent:0px">
+<DL COMPACT>
+<DT>&#0091;D:6239-6241&#0093;<DD>
+An ERE matching a single character repeated by an '*' , '?' , or an
+interval expression shall not match a null expression unless this is
+the only match for the repetition or it is necessary to satisfy the
+exact or minimum number of occurrences for the interval expression.
+</DL>
+</DIV>
+<P>
+The following examples dig deeper into replicated subexpressions.
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#12:E	(.?.?)			xxx	(0,2)(0,2)
+:RE#13:E	(.?.?){1}		xxx	(0,2)(0,2)
+:RE#14:E	(.?.?)(.?.?)		xxx	(0,3)(0,2)(2,3)
+:RE#15:E	(.?.?){2}		xxx	(0,3)(2,3)
+:RE#16:E	(.?.?)(.?.?)(.?.?)	xxx	(0,3)(0,2)(2,3)(3,3)
+:RE#17:E	(.?.?){3}		xxx	(0,3)(3,3)
+:RE#18:E	(.?.?)*			xxx	(0,3)(2,3)
+</DIV>
+</PRE>
+Here RE#14 shows that only two iterations are needed for a complete match,
+making the last iteration match for RE#18 (2,3), since the first
+iteration matched (0,2), as in RE#14.
+
+<P>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="A subpattern is ">A subpattern is </A></H3></FONT></FONT></CENTER>
+The term
+<EM>subpattern</EM>
+appears exactly once:
+<DIV style="padding-left:16px;text-indent:0px">
+<DL COMPACT>
+<DT>&#0091;D:5907-5908&#0093;<DD>
+Consistent with the whole match being the longest of the leftmost matches,
+each subpattern, from left to right, shall match the longest possible string.
+</DL>
+</DIV>
+Consider RE#04 and RE#05 again:
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#04:E	(a?)((ab)?)(b?)		ab	(0,2)(0,1)(1,1)(?,?)(1,2)
+:RE#05:E	((a?)((ab)?))(b?)	ab	(0,2)(0,2)(0,0)(0,2)(0,2)(2,2)
+</DIV>
+</PRE>
+If a subpattern were an entity that combined adjacent subexpressions,
+e.g.,
+<TT>(a?)((ab)?)</TT>
+in RE#04, then &#0091;D:5907-5908&#0093; would violate &#0091;R:2359-2370&#0093;.
+Similarly, if a subpattern were an entity that "went inside" subexpressions,
+e.g.,
+<TT>(a?)</TT>
+in RE#05, then again &#0091;D:5907-5908&#0093; would violate &#0091;R:2359-2370&#0093;.
+In other words, a subpattern can be neither larger than nor smaller than
+a subexpression;
+a subpattern must be a grammatical entity equivalent to a subexpression.
+This corresponds to the nonterminal
+<TT>nondupl_RE</TT>
+in the BRE grammar; there is no direct correspondence to a nonterminal
+in the ERE grammar.
+However, if the optional duplication operator (*,+,?,range) is included then
+subpattern corresponds to
+<TT>simple_RE</TT>
+in the BRE grammar and
+<TT>ERE_expression</TT>
+in the ERE grammar, and both &#0091;D:5907-5908&#0093; and &#0091;R:2359-2370&#0093; are satisfied.
+<DIV style="padding-left:16px;text-indent:0px">
+<DL COMPACT>
+<DT><STRONG>DEFINITION</STRONG><DD>
+A
+<EM>subpattern</EM>
+corresponds to the
+<TT>simple_RE</TT>
+nonterminal in the BRE grammar or the
+<TT>ERE_expression</TT>
+nonterminal in the ERE grammar.
+</DL>
+</DIV>
+This means that subexpressions and subpatterns are of equal importance
+in RE matching.
+Also note that any other definition for subpattern will put
+&#0091;D:5907-5908&#0093; in direct conflict with &#0091;R:2359-2370&#0093;.
+<P>
+RE#19, RE#20 and RE#21 examine the relationship between subexpression
+and subpattern:
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#19:E	a?((ab)?)(b?)		ab	(0,2)(1,1)(?,?)(1,2)
+:RE#20:E	(a?)((ab)?)b?		ab	(0,2)(0,1)(1,1)(?,?)
+:RE#21:E	a?((ab)?)b?		ab	(0,2)(1,1)(?,?)
+</DIV>
+</PRE>
+<P>
+These are all variations of RE#04.
+Other than subexpression renumbering, the match for the subexpression
+<TT>((ab)?)</TT>
+must be the same in RE#04, RE#19, RE#20 and RE#21.
+<TT>a?</TT>
+is a subpattern in RE#19 and RE#21, of equal matching importance to
+<TT>(a?)</TT>
+in RE#04, and
+<TT>b?</TT>
+is a subpattern in RE#20 and RE#21, of equal matching
+importance to
+<TT>(b?)</TT>
+in RE#04.
+
+<P>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="The Dark Corners ">The Dark Corners </A></H3></FONT></FONT></CENTER>
+The remaining examples explore dark corners of the standard
+and implementations.
+Although the differences between some of the examples are subtle,
+for some implementations it may mean the difference between an answer and
+a core dump.
+<P>
+In RE#22 subexpression
+<TT>(a*)</TT>
+matches the null string at (0,0), and continues to match at that position
+until the minimal range count is satisfied.
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#22:E	(a*){2}			xxxxx	(0,0)(0,0)
+</DIV>
+</PRE>
+RE#23 through RE#27 expose implementations that sometimes do
+<EM>first match</EM>
+for alternation within subexpressions.
+Some implementations erroneously match the first iteration of
+subexpression-1 in RE#24 through RE#27 to (0,1).
+RE#27 is equivalent to RE#26; the match requires two iterations, the first
+matching (0,2) and the last matching (2,3).
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#23:E	(ab?)(b?a)		aba	(0,3)(0,2)(2,3)
+:RE#24:E	(a|ab)(ba|a)		aba	(0,3)(0,2)(2,3)
+:RE#25:E	(a|ab|ba)		aba	(0,2)(0,2)
+:RE#26:E	(a|ab|ba)(a|ab|ba)	aba	(0,3)(0,2)(2,3)
+:RE#27:E	(a|ab|ba)*		aba	(0,3)(2,3)
+</DIV>
+</PRE>
+RE#28 through RE#33 expose implementations that report short matches
+for some repeated subexpressions.
+Some implementations report incorrect matches for
+subexpression-1 in RE#30 and RE#33.
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#28:E	(aba|a*b)		ababa	(0,3)(0,3)
+:RE#29:E	(aba|a*b)(aba|a*b)	ababa	(0,5)(0,2)(2,5)
+:RE#30:E	(aba|a*b)*		ababa	(0,5)(2,5)
+:RE#31:E	(aba|ab|a)		ababa	(0,3)(0,3)
+:RE#32:E	(aba|ab|a)(aba|ab|a)	ababa	(0,5)(0,2)(2,5)
+:RE#33:E	(aba|ab|a)*		ababa	(0,5)(2,5)
+</DIV>
+</PRE>
+RE#34 through RE#36 expose implementations that report subexpression matches
+for earlier iterations of the subexpression.
+Some implementations report a match for subexpression-2 in RE#36
+while reporting the (2,3) match for subexpression-1: clearly a bug.
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#34:E	(a(b)?)			aba	(0,2)(0,2)(1,2)
+:RE#35:E	(a(b)?)(a(b)?)		aba	(0,3)(0,2)(1,2)(2,3)(?,?)
+:RE#36:E	(a(b)?)+		aba	(0,3)(2,3)(?,?)
+</DIV>
+</PRE>
+RE#37 and RE#38 expose implementations that give priority to subexpression
+matching over subpattern matching.
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#37:E	(.*)(.*)		xx	(0,2)(0,2)(2,2)
+:RE#38:E	.*(.*)			xx	(0,2)(2,2)
+</DIV>
+</PRE>
+RE#39 through RE#41 expose implementations that treat explicit vs. implicit
+subexpression repetition differently.
+This is a theme common to many of the previous examples.
+Again, the subexpression in RE#41 requires two iterations to match,
+and the second iteration matches (5,7), as illustrated by RE#40.
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#39:E	(a.*z|b.*y)		azbazby	(0,5)(0,5)
+:RE#40:E	(a.*z|b.*y)(a.*z|b.*y)	azbazby	(0,7)(0,5)(5,7)
+:RE#41:E	(a.*z|b.*y)*		azbazby	(0,7)(5,7)
+</DIV>
+</PRE>
+RE#42 is another
+<EM>first match</EM>
+test.
+Some implementations erroneously report a match of (0,1) for subexpression-1.
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#42:E	(.|..)(.*)		ab	(0,2)(0,2)(2,2)
+</DIV>
+</PRE>
+RE#43 through RE#45 require only one iteration of subexpression-1 to
+match the entire subject string.
+RE#45 exposes three separate bugs in the implementations that were tested.
+The most common was
+<EM>over iteration</EM>,
+where subexpression-1 is matched for a second iteration to the null string
+at (3,3).
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#43:E	((..)*(...)*)			xxx		(0,3)(0,3)(?,?)(0,3)
+:RE#44:E	((..)*(...)*)((..)*(...)*)	xxx		(0,3)(0,3)(?,?)(0,3)(3,3)(?,?)(?,?)
+:RE#45:E	((..)*(...)*)*			xxx		(0,3)(0,3)(?,?)(0,3)
+</DIV>
+</PRE>
+RE#46 through RE#82 are nasty;
+backreferences are intuitive neither for the implementor nor the user.
+<P>
+RE#49, RE#53, RE#67 and RE#68 illustrate the second part of the
+<EM>subpattern</EM>
+rule:
+<DIV style="padding-left:16px;text-indent:0px">
+<DL COMPACT>
+<DT>&#0091;D:5908-5909&#0093;<DD>
+For this purpose, a null string shall be considered to be longer than
+no match at all.
+</DL>
+</DIV>
+RE#53 requires close examination to see why the match is (0,2)(1,1)(2,2)
+instead of (0,2)(0,1)(?,?).
+The match of (0,1) for subexpression-1 is longer than (1,1), but
+subexpression-1 can be repeated, and that second iteration allows
+subexpression-2 to match (2,2), which is longer than (?,?) by &#0091;D:5908-5909&#0093;.
+<DIV style="padding-left:16px;text-indent:0px">
+<PRE>
+:RE#46:B	&#0092;(a&#0092;{0,1&#0092;}&#0092;)*b&#0092;1	ab	(0,2)(1,1)
+:RE#47:B	&#0092;(a*&#0092;)*b&#0092;1		ab	(0,2)(1,1)
+:RE#48:B	&#0092;(a*&#0092;)b&#0092;1*		ab	(0,2)(0,1)
+:RE#49:B	&#0092;(a*&#0092;)*b&#0092;1*		ab	(0,2)(1,1)
+:RE#50:B	&#0092;(a&#0092;{0,1&#0092;}&#0092;)*b&#0092;(&#0092;1&#0092;)	ab	(0,2)(1,1)(2,2)
+:RE#51:B	&#0092;(a*&#0092;)*b&#0092;(&#0092;1&#0092;)		ab	(0,2)(1,1)(2,2)
+:RE#52:B	&#0092;(a*&#0092;)b&#0092;(&#0092;1&#0092;)*		ab	(0,2)(0,1)(?,?)
+:RE#53:B	&#0092;(a*&#0092;)*b&#0092;(&#0092;1&#0092;)*		ab	(0,2)(1,1)(2,2)
+:RE#54:B	&#0092;(a&#0092;{0,1&#0092;}&#0092;)*b&#0092;1	aba	(0,3)(0,1)
+:RE#55:B	&#0092;(a*&#0092;)*b&#0092;1		aba	(0,3)(0,1)
+:RE#56:B	&#0092;(a*&#0092;)b&#0092;1*		aba	(0,3)(0,1)
+:RE#57:B	&#0092;(a*&#0092;)*b&#0092;1*		aba	(0,3)(0,1)
+:RE#58:B	&#0092;(a*&#0092;)*b&#0092;(&#0092;1&#0092;)*		aba	(0,3)(0,1)(2,3)
+:RE#59:B	&#0092;(a&#0092;{0,1&#0092;}&#0092;)*b&#0092;1	abaa	(0,3)(0,1)
+:RE#60:B	&#0092;(a*&#0092;)*b&#0092;1		abaa	(0,3)(0,1)
+:RE#61:B	&#0092;(a*&#0092;)b&#0092;1*		abaa	(0,4)(0,1)
+:RE#62:B	&#0092;(a*&#0092;)*b&#0092;1*		abaa	(0,4)(0,1)
+:RE#63:B	&#0092;(a*&#0092;)*b&#0092;(&#0092;1&#0092;)*		abaa	(0,4)(0,1)(3,4)
+:RE#64:B	&#0092;(a&#0092;{0,1&#0092;}&#0092;)*b&#0092;1	aab	(0,3)(2,2)
+:RE#65:B	&#0092;(a*&#0092;)*b&#0092;1		aab	(0,3)(2,2)
+:RE#66:B	&#0092;(a*&#0092;)b&#0092;1*		aab	(0,3)(0,2)
+:RE#67:B	&#0092;(a*&#0092;)*b&#0092;1*		aab	(0,3)(2,2)
+:RE#68:B	&#0092;(a*&#0092;)*b&#0092;(&#0092;1&#0092;)*		aab	(0,3)(2,2)(3,3)
+:RE#69:B	&#0092;(a&#0092;{0,1&#0092;}&#0092;)*b&#0092;1	aaba	(0,4)(1,2)
+:RE#70:B	&#0092;(a*&#0092;)*b&#0092;1		aaba	(0,4)(1,2)
+:RE#71:B	&#0092;(a*&#0092;)b&#0092;1*		aaba	(0,3)(0,2)
+:RE#72:B	&#0092;(a*&#0092;)*b&#0092;1*		aaba	(0,4)(1,2)
+:RE#73:B	&#0092;(a*&#0092;)*b&#0092;(&#0092;1&#0092;)*		aaba	(0,4)(1,2)(3,4)
+:RE#74:B	&#0092;(a&#0092;{0,1&#0092;}&#0092;)*b&#0092;1	aabaa	(0,4)(1,2)
+:RE#75:B	&#0092;(a*&#0092;)*b&#0092;1		aabaa	(0,5)(0,2)
+:RE#76:B	&#0092;(a*&#0092;)b&#0092;1*		aabaa	(0,5)(0,2)
+:RE#77:B	&#0092;(a*&#0092;)*b&#0092;1*		aabaa	(0,5)(0,2)
+:RE#78:B	&#0092;(a*&#0092;)*b&#0092;(&#0092;1&#0092;)*		aabaa	(0,5)(0,2)(3,5)
+:RE#79:B	&#0092;(x&#0092;)*a&#0092;1		a	NOMATCH
+:RE#80:B	&#0092;(x&#0092;)*a&#0092;1*		a	(0,1)(?,?)
+:RE#81:B	&#0092;(x&#0092;)*a&#0092;(&#0092;1&#0092;)		a	NOMATCH
+:RE#82:B	&#0092;(x&#0092;)*a&#0092;(&#0092;1&#0092;)*		a	(0,1)(?,?)(?,?)
+:RE#83:E	(aa(b(b))?)+		aabbaa	(0,6)(4,6)(?,?)(?,?)
+:RE#84:E	(a(b)?)+		aba	(0,3)(2,3)(?,?)
+:RE#85:E	(&#0091;ab&#0093;+)(&#0091;bc&#0093;+)(&#0091;cd&#0093;*)		abcd		(0,4)(0,2)(2,3)(3,4)
+:RE#86:B	&#0092;(&#0091;ab&#0093;*&#0092;)&#0092;(&#0091;bc&#0093;*&#0092;)&#0092;(&#0091;cd&#0093;*&#0092;)&#0092;1	abcdaa		(0,5)(0,1)(1,3)(3,4)
+:RE#87:B	&#0092;(&#0091;ab&#0093;*&#0092;)&#0092;(&#0091;bc&#0093;*&#0092;)&#0092;(&#0091;cd&#0093;*&#0092;)&#0092;1	abcdab		(0,6)(0,2)(2,3)(3,4)
+:RE#88:B	&#0092;(&#0091;ab&#0093;*&#0092;)&#0092;(&#0091;bc&#0093;*&#0092;)&#0092;(&#0091;cd&#0093;*&#0092;)&#0092;1*	abcdaa		(0,6)(0,1)(1,3)(3,4)
+:RE#89:B	&#0092;(&#0091;ab&#0093;*&#0092;)&#0092;(&#0091;bc&#0093;*&#0092;)&#0092;(&#0091;cd&#0093;*&#0092;)&#0092;1*	abcdab		(0,6)(0,2)(2,3)(3,4)
+:RE#90:E	^(A(&#0091;^B&#0093;*))?(B(.*))?		Aa		(0,2)(0,2)(1,2)
+:RE#91:E	^(A(&#0091;^B&#0093;*))?(B(.*))?		Bb		(0,2)(?,?)(?,?)(0,2)(1,2)
+:RE#92:B	.*&#0092;(&#0091;AB&#0093;&#0092;).*&#0092;1			ABA		(0,3)(0,1)
+:RE#93:B$	&#0091;^A&#0093;*A				&#0092;nA		(0,2)
+</DIV>
+</PRE>
+
+<P>
+<P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="Conclusion">Conclusion</A></H3></FONT></FONT></CENTER>
+It is possible to use the 2001 issue of the POSIX
+<STRONG>regex</STRONG>
+standard,
+<EM>with the addition of one sentence</EM>,
+to resolve the interpretation differences that have surfaced since 1995.
+That key sentence is a precise and consistent definition for the term
+<EM>subpattern</EM>.
+By noting the relationship between
+<EM>subpatterns</EM>
+and
+<EM>subexpressions</EM>,
+the proposed definition is shown to be the only one that can be
+consistent with all parts of the standard.
+<P>
+<HR>
+<TABLE border=0 align=center width=96%>
+<TR>
+<TD align=left></TD>
+<TD align=center></TD>
+<TD align=right><A href="mailto:gsf@research.att.com?subject= ../re/re-interpretation.mm mm document">Glenn Fowler</A></TD>
+</TR>
+<TR>
+<TD align=left></TD>
+<TD align=center></TD>
+<TD align=right>Information and Software Systems Research</TD>
+</TR>
+<TR>
+<TD align=left></TD>
+<TD align=center></TD>
+<TD align=right>AT&amp;T Labs Research</TD>
+</TR>
+<TR>
+<TD align=left></TD>
+<TD align=center></TD>
+<TD align=right>Florham Park NJ</TD>
+</TR>
+<TR>
+<TD align=left></TD>
+<TD align=center></TD>
+<TD align=right>January 2003</TD>
+</TR>
+</TABLE>
+<P>
+
+</TD></TR></TBODY></TABLE>
+
+</BODY>
+</HTML>
